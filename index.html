@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Supermarket Review Flow</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f7f8;
+    padding: 20px;
+    max-width: 700px;
+    margin: auto;
+  }
+  h2 {
+    text-align: center;
+    color: #333;
+  }
+  .hidden {
+    display: none;
+  }
+  .product-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 30px;
+    justify-content: center;
+  }
+  .product-item {
+    background: #007bff;
+    color: white;
+    padding: 12px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    flex: 1 1 calc(33% - 20px);
+    text-align: center;
+    user-select: none;
+    transition: background-color 0.3s ease;
+    min-width: 150px;
+  }
+  .product-item:hover {
+    background: #0056b3;
+  }
+  form {
+    background: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    max-width: 500px;
+    margin: auto;
+  }
+  label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: bold;
+    color: #555;
+  }
+  input[type="text"],
+  textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    font-size: 14px;
+  }
+  textarea {
+    height: 100px;
+    resize: vertical;
+  }
+  input[type="submit"], button {
+    background-color: #007bff;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s ease;
+  }
+  input[type="submit"]:hover, button:hover {
+    background-color: #0056b3;
+  }
+  #reply-box {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #e7f3fe;
+    border: 1px solid #b3d4fc;
+    color: #31708f;
+    border-radius: 5px;
+    display: none;
+    max-width: 500px;
+    margin: 20px auto 0 auto;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<h2>Welcome! Please Enter Your Name</h2>
+
+<!-- Step 1: Enter Name -->
+<form id="nameForm">
+  <label for="username">Your Name:</label>
+  <input type="text" id="username" name="username" required />
+  <input type="submit" value="Continue" />
+</form>
+
+<!-- Step 2: Product List -->
+<div id="productSection" class="hidden">
+  <h2>Hello, <span id="displayName"></span>! Select a Supermarket Product</h2>
+  <div class="product-list" id="productList">
+    <div class="product-item" data-id="S001" data-name="Milk">Milk</div>
+    <div class="product-item" data-id="S002" data-name="Bread">Bread</div>
+    <div class="product-item" data-id="S003" data-name="Eggs">Eggs</div>
+    <div class="product-item" data-id="S004" data-name="Rice">Rice</div>
+    <div class="product-item" data-id="S005" data-name="Butter">Butter</div>
+    <div class="product-item" data-id="S006" data-name="Cheese">Cheese</div>
+    <div class="product-item" data-id="S007" data-name="Tomatoes">Tomatoes</div>
+    <div class="product-item" data-id="S008" data-name="Apples">Apples</div>
+    <div class="product-item" data-id="S009" data-name="Chicken">Chicken</div>
+    <div class="product-item" data-id="S010" data-name="Coffee">Coffee</div>
+  </div>
+</div>
+
+<!-- Step 3: Review Form -->
+<form id="reviewForm" class="hidden">
+  <h2>Submit your review for <span id="selectedProductName"></span></h2>
+  <input type="hidden" id="product_id" name="product_id" />
+  <label for="review">Your Review:</label>
+  <textarea id="review" name="review" required></textarea>
+  <input type="submit" value="Submit Review" />
+</form>
+
+<div id="reply-box"></div>
+
+<script>
+  const nameForm = document.getElementById('nameForm');
+  const usernameInput = document.getElementById('username');
+  const productSection = document.getElementById('productSection');
+  const displayName = document.getElementById('displayName');
+  const productList = document.getElementById('productList');
+  const reviewForm = document.getElementById('reviewForm');
+  const selectedProductNameSpan = document.getElementById('selectedProductName');
+  const productIdInput = document.getElementById('product_id');
+  const reviewInput = document.getElementById('review');
+  const replyBox = document.getElementById('reply-box');
+
+  let userName = '';
+
+  // Step 1: Handle username submit
+  nameForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    userName = usernameInput.value.trim();
+    if(userName.length === 0) {
+      alert('Please enter your name.');
+      return;
+    }
+    // Hide name form, show product list
+    nameForm.classList.add('hidden');
+    displayName.textContent = userName;
+    productSection.classList.remove('hidden');
+  });
+
+  // Step 2: Handle product click
+  productList.addEventListener('click', (e) => {
+    if(e.target.classList.contains('product-item')) {
+      const productId = e.target.dataset.id;
+      const productName = e.target.dataset.name;
+
+      // Show review form with selected product info
+      selectedProductNameSpan.textContent = productName;
+      productIdInput.value = productId;
+      reviewInput.value = '';
+      replyBox.style.display = 'none';
+      replyBox.textContent = '';
+
+      reviewForm.classList.remove('hidden');
+
+      // Scroll down to form for better UX
+      reviewForm.scrollIntoView({behavior: "smooth"});
+    }
+  });
+
+// Step 3: Handle review submission (Send to Flask backend)
+reviewForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const productId = productIdInput.value;
+  const productName = selectedProductNameSpan.textContent;
+  const reviewText = reviewInput.value.trim();
+
+  if (!reviewText) {
+    alert("Please enter your review.");
+    return;
+  }
+
+  const data = {
+    username: userName,
+    product_id: productId,
+    product_name: productName,
+    review: reviewText
+  };
+
+  try {
+    const response = await fetch("http://127.0.0.1:5000/api/review", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
+
+    const result = await response.json();
+
+    replyBox.style.display = 'block';
+    replyBox.textContent = result.reply;
+
+    reviewInput.value = '';
+  } catch (error) {
+    console.error("Error:", error);
+    replyBox.style.display = 'block';
+    replyBox.textContent = "Sorry, something went wrong. Please try again.";
+  }
+});
+
+</script>
+
+</body>
+</html>
